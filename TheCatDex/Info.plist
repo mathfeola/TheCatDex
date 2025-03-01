@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>EnviromentSetting</key>
+	<dict>
+		<key>THE_CAT_API_VERSION</key>
+		<string>${THE_CAT_API_VERSION}</string>
+		<key>THE_CAT_API_BASE_URL</key>
+		<string>${THE_CAT_API_BASE_URL}</string>
+		<key>THE_CAT_API_KEY</key>
+		<string>${THE_CAT_API_KEY}</string>
+	</dict>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict/>
+	</array>
+</dict>
+</plist>
