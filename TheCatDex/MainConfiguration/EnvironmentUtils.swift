@@ -1,5 +1,5 @@
 //
-//  EnviromentUtils.swift
+//  EnvironmentUtils.swift
 //  TheCatDex
 //
 //  Created by Matheus Feola on 01/03/2025.
@@ -7,11 +7,11 @@
 
 import Foundation
 
-public struct EnviromentUtil {
+public struct EnvironmentUtil {
     
     private var environment: [String: Any]? {
         get {
-            Bundle.main.infoDictionary?["EnviromentSetting"] as? [String: Any]
+            Bundle.main.infoDictionary?["EnvironmentSetting"] as? [String: Any]
         }
     }
     
