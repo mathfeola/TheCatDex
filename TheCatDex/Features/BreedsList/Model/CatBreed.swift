@@ -9,6 +9,7 @@ import Foundation
 
 struct CatBreed: Codable, Identifiable, Equatable {
     let id: String
+    let name: String?
     let origin: String
     let temperament: String
     let description: String

@@ -36,8 +36,8 @@ extension API {
         return request
     }
     
-    private func fetchData<T: Codable & Equatable>(from url: URL) async throws -> T {
-        let (data, _) = try await URLSession.shared.data(from: url)
+    private func fetchData<T: Codable & Equatable>(from request: URLRequest) async throws -> T {
+        let (data, _) = try await URLSession.shared.data(for: request)
 
         if T.self == String.self, let stringData = String(data: data, encoding: .utf8) as? T {
             return stringData
@@ -47,13 +47,8 @@ extension API {
     
     func genericFetch<T: Codable & Equatable>(parameters: [URLQueryItem]?) async throws -> [T] {
         do {
-            let request = composeRequest(queryItems: parameters)
-            if let url = request.url {
-                let decodedResponse: [T] = try await fetchData(from: url)
+            let decodedResponse: [T] = try await fetchData(from: composeRequest(queryItems: parameters))
                 return decodedResponse
-            } else {
-                return []
-            }
         } catch {
             print("Request failed:", error.localizedDescription)
             return []
