@@ -8,11 +8,9 @@
 import SwiftUI
 import ComposableArchitecture
 
-@Reducer
-struct BreedListFeature {
+struct BreedListFeature: Reducer {
     
-    @ObservableState
-    struct State {
+    struct State: Equatable {
         var breeds: [CatBreed]?
         var isLoading = false
     }
@@ -27,7 +25,6 @@ struct BreedListFeature {
         Reduce { state, action in
             switch action {
             case let .breedListResponse(breeds):
-                print("Load list")
                 return .none
             case .breedItemTapped:
                 print("Open detail View")
@@ -44,6 +41,8 @@ struct BreedsListView: View {
     let store: StoreOf<BreedListFeature>
     
     var body: some View {
-        Text("CatBreeds")
+        WithViewStore(store, observe: { $0 }) { viewStore in
+            Text("CatBreeds")
+        }
     }
 }
