@@ -10,13 +10,13 @@ import ComposableArchitecture
 
 @main
 struct TheCatDexApp: App {
-    static let store = Store(initialState: BreedListFeature.State()) {
-        BreedListFeature()
+    static let store = Store(initialState: AppFeature.State()) {
+        AppFeature()
       }
     
     var body: some Scene {
         WindowGroup {
-            BreedsListView(store: TheCatDexApp.store)
+            AppView(store: TheCatDexApp.store)
         }
     }
 }

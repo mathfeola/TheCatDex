@@ -18,6 +18,7 @@ struct BreedListFeature: Reducer {
     }
     
     enum Action {
+        case fetchBreedList
         case breedListResponse([CatBreed])
         case filter(String)
         case breedSelected(CatBreed)
@@ -27,6 +28,15 @@ struct BreedListFeature: Reducer {
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
+            case .fetchBreedList:
+                return .run { send in
+                    do {
+                        let breeds = try await CatAPI.fetchCatBreeds(page: 0).execute() as? [CatBreed]
+                        await send(.breedListResponse(breeds ?? []))
+                    } catch {
+                        print("Not worked")
+                    }
+                }
             case let .breedListResponse(breeds):
                 state.breeds = breeds
                 return .none
@@ -52,6 +62,8 @@ struct BreedsListView: View {
             NavigationStack {
                 List(viewStore.breeds, id: \.id) { breed in
                     CatBreedItemList(breed: breed)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .contentShape(Rectangle())
                         .onTapGesture {
                             viewStore.send(.breedSelected(breed))
                         }
@@ -59,12 +71,7 @@ struct BreedsListView: View {
                 .navigationBarTitle("CatBreeds")
             }
             .task {
-                do {
-                    let breeds = try await CatAPI.fetchCatBreeds(page: 0).execute() as? [CatBreed]
-                    viewStore.send(.breedListResponse(breeds ?? []))
-                } catch {
-                    print("Not worked")
-                }
+                viewStore.send(.fetchBreedList)
             }
             .sheet(
                 isPresented: Binding(
@@ -119,6 +126,7 @@ struct CatBreedItemList: View {
                 }
             }
             Text("\(breed.name ?? "Cat name")")
+            Spacer()
         }
     }
 }
