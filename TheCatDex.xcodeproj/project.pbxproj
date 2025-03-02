@@ -442,6 +442,7 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				THE_CAT_API_BASE_URL = api.thecatapi.com;
 			};
 			name = Debug;
 		};
@@ -471,6 +472,7 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				THE_CAT_API_BASE_URL = api.thecatapi.com;
 			};
 			name = Release;
 		};
@@ -634,6 +636,7 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				THE_CAT_API_BASE_URL = api.thecatapi.com;
 			};
 			name = Development;
 		};
@@ -756,6 +759,7 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				THE_CAT_API_BASE_URL = api.thecatapi.com;
 			};
 			name = Deploy;
 		};

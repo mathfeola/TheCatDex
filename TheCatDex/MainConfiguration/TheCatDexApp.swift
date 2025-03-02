@@ -6,12 +6,17 @@
 //
 
 import SwiftUI
+import ComposableArchitecture
 
 @main
 struct TheCatDexApp: App {
+    static let store = Store(initialState: BreedListFeature.State()) {
+        BreedListFeature()
+      }
+    
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            BreedsListView(store: TheCatDexApp.store)
         }
     }
 }
