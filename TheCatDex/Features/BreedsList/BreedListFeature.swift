@@ -14,13 +14,14 @@ struct BreedListFeature: Reducer {
         var breeds: [CatBreed] = []
         var isLoading = false
         var selectedBreed: BreedDetailFeature.State?
+        var shouldOpenDetail = false
     }
     
     enum Action {
         case breedListResponse([CatBreed])
         case filter(String)
         case breedSelected(CatBreed)
-        case setNavigation(Bool)       // ✅ Handle back navigation
+        case closeDetailModal
     }
     
     var body: some ReducerOf<Self> {
@@ -30,15 +31,13 @@ struct BreedListFeature: Reducer {
                 state.breeds = breeds
                 return .none
             case .filter(_):
-                print("Filter")
                 return .none
             case let .breedSelected(breed):
                 state.selectedBreed = BreedDetailFeature.State(breed: breed)
+                state.shouldOpenDetail = true
                 return .none
-            case .setNavigation(false):
-                state.selectedBreed = nil
-                return .none
-            case .setNavigation(true):
+            case .closeDetailModal:
+                state.shouldOpenDetail = false
                 return .none
             }
         }
@@ -51,26 +50,38 @@ struct BreedsListView: View {
     var body: some View {
         WithViewStore(store, observe: { $0 }) { viewStore in
             NavigationStack {
-                VStack {
-                    Text("CatBreeds")
-                    List(viewStore.breeds, id: \.id) { breed in
-                        CatBreedItemList(breed: breed)
+                List(viewStore.breeds, id: \.id) { breed in
+                    CatBreedItemList(breed: breed)
                         .onTapGesture {
                             viewStore.send(.breedSelected(breed))
                         }
-                    }
                 }
-                .onAppear {
-                    Task {
-                        do {
-                            let breeds = try await CatAPI.fetchCatBreeds(page: 0).execute() as? [CatBreed]
-                            viewStore.send(.breedListResponse(breeds ?? []))
-                        } catch {
-                            print("Not worked")
+                .navigationBarTitle("CatBreeds")
+            }
+            .task {
+                do {
+                    let breeds = try await CatAPI.fetchCatBreeds(page: 0).execute() as? [CatBreed]
+                    viewStore.send(.breedListResponse(breeds ?? []))
+                } catch {
+                    print("Not worked")
+                }
+            }
+            .sheet(
+                isPresented: Binding(
+                    get: { viewStore.shouldOpenDetail },
+                    set: { isPresented in
+                        if !isPresented {
+                            viewStore.send(.closeDetailModal)
                         }
                     }
+                )
+            ) {
+                if let selectedBreedState = viewStore.selectedBreed {
+                    BreedDetailView(store: Store(
+                        initialState: BreedDetailFeature.State(breed: selectedBreedState.breed),
+                        reducer: { BreedDetailFeature() }
+                    ))
                 }
-                
             }
         }
     }
@@ -107,7 +118,7 @@ struct CatBreedItemList: View {
                     }
                 }
             }
-            Text("CatBreed: \(breed.name ?? "Cat name")")
+            Text("\(breed.name ?? "Cat name")")
         }
     }
 }

@@ -40,24 +40,57 @@ struct BreedDetailView: View {
                     .font(.largeTitle)
                     .padding()
                 
-                if let breedImage = viewStore.breed.image, let url = URL(string: breedImage.url) {
-                    AsyncImage(url: url) { image in
-                        image.resizable().scaledToFit()
-                    } placeholder: {
-                        ProgressView()
-                    }
-                    .frame(width: 200, height: 200)
-                    .clipShape(RoundedRectangle(cornerRadius: 20))
-                    .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.pink, lineWidth: 2))
+                breedImage
+                
+                Text(viewStore.breed.origin)
                     .padding()
-                }
+                
+                Text(viewStore.breed.temperament)
+                    .padding()
 
                 Text(viewStore.breed.description)
                     .padding()
-
+                
+                favouriteButton
+                
                 Spacer()
             }
-            .navigationTitle("Breed Details")
+        }
+    }
+    
+    var breedImage: some View {
+        WithViewStore(store, observe: { $0 }) { viewStore in
+            if let breedImage = viewStore.breed.image,
+               let url = URL(string: breedImage.url) {
+                AsyncImage(url: url) { image in
+                    image.resizable().scaledToFit()
+                } placeholder: {
+                    ProgressView()
+                }
+                .frame(width: 200, height: 200)
+                .clipShape(RoundedRectangle(cornerRadius: 20))
+                .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.pink, lineWidth: 2))
+                .padding()
+            }
+        }
+    }
+    
+    var favouriteButton: some View {
+        Button {} label: {
+            HStack {
+                Image(systemName: "star")
+                    .tint(.pink)
+                Text("Favourite")
+                    .tint(.pink)
+            }
+            .padding()
+            .frame(maxWidth: .infinity)
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(Color.pink, lineWidth: 2)
+            )
+            .padding()
         }
     }
 }
