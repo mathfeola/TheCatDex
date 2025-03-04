@@ -9,9 +9,9 @@ import Foundation
 import SwiftData
 
 @Model
-class CatBreed: Codable, Identifiable, Equatable {
+public class CatBreed: Codable, Identifiable, Equatable {
     @Attribute(.unique)
-    var id: String
+    public var id: String
     var name: String?
     var origin: String
     var temperament: String
@@ -42,7 +42,7 @@ class CatBreed: Codable, Identifiable, Equatable {
         self.isFavourite = isFavourite
     }
     
-    required init(from decoder: Decoder) throws {
+    public required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
         id = try container.decode(String.self, forKey: .id)
@@ -55,7 +55,7 @@ class CatBreed: Codable, Identifiable, Equatable {
         isFavourite = try container.decodeIfPresent(Bool.self, forKey: .isFavourite)
     }
     
-    func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(id, forKey: .id)
         try container.encode(name, forKey: .name)
@@ -69,7 +69,7 @@ class CatBreed: Codable, Identifiable, Equatable {
 }
 
 extension CatBreed {
-    static func == (lhs: CatBreed, rhs: CatBreed) -> Bool {
+    public static func == (lhs: CatBreed, rhs: CatBreed) -> Bool {
         return lhs.id == rhs.id &&
         lhs.name == rhs.name &&
         lhs.origin == rhs.origin &&

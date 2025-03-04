@@ -9,7 +9,8 @@ import SwiftUI
 import ComposableArchitecture
 import SwiftData
 
-struct BreedListFeature: Reducer {
+@Reducer
+struct BreedListFeature {
     
     enum FeatureErrorMessages: String {
         case decodingError = "🐛 Decoding error: "
@@ -17,6 +18,7 @@ struct BreedListFeature: Reducer {
         case unknownError = "❌ Unknown error: "
     }
     
+    @ObservableState
     struct State: Equatable {
         var breeds: [CatBreed] = []
         var isLoading = false
@@ -27,6 +29,18 @@ struct BreedListFeature: Reducer {
         var currentPage = 0
         var isFetchingMore = false
         var favouriteBreedIDs: Set<String> = []
+        var filterText: String = ""
+        var filteredBreeds: [CatBreed] = []
+        
+        func fetchCatBreeds() -> [CatBreed] {
+            @Dependency(\.catBreedDatabase.fetchAll) var fetchAll
+            do {
+                return try fetchAll()  // ✅ Fetch all stored breeds
+            } catch {
+                print("❌ Error fetching breeds from SwiftData: \(error)")
+                return []  // ✅ Return empty if an error occurs
+            }
+        }
     }
     
     enum Action {
@@ -65,7 +79,19 @@ struct BreedListFeature: Reducer {
                 state.currentErrorMessage = String()
                 state.shouldShowErrorState = false
                 return .none
-            case .filter(_):
+            case let .filter(query):
+                state.filterText = query
+                if query.isEmpty {
+                    state.filteredBreeds = state.breeds
+                } else {
+                    state.filteredBreeds = state.breeds.filter { breed in
+                        if let breedName = breed.name {
+                            return breedName.lowercased().contains(query.lowercased())
+                        }
+                        return false
+                    }
+                }
+                
                 return .none
             case let .breedSelected(breed):
                 state.selectedBreed = BreedDetailFeature.State(breed: breed)
@@ -103,22 +129,53 @@ struct BreedsListView: View {
     var body: some View {
         WithViewStore(store, observe: { $0 }) { viewStore in
             NavigationStack {
-                List(viewStore.breeds, id: \.id) { breed in
-                    CatBreedItemList(breed: breed, isFavourite: viewStore.favouriteBreedIDs.contains(breed.id))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .onTapGesture {
-                            viewStore.send(.breedSelected(breed))
-                        }
-                        .onAppear {
-                            if breed == viewStore.breeds.last {
-                                viewStore.send(.fetchMoreBreeds)
+                TextField("Search breeds...", text: viewStore.binding(
+                    get: \.filterText,
+                    send: { .filter($0) }
+                ))
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .padding()
+                
+                if !viewStore.filterText.isEmpty {
+                    List(viewStore.filteredBreeds, id: \.id) { breed in
+                        CatBreedItemList(breed: breed, isFavourite: viewStore.favouriteBreedIDs.contains(breed.id))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .onTapGesture {
+                                viewStore.send(.breedSelected(breed))
                             }
+                            .onAppear {
+                                if breed == viewStore.breeds.last {
+                                    viewStore.send(.fetchMoreBreeds)
+                                }
+                            }
+                    }
+                    .overlay {
+                        if viewStore.filteredBreeds.isEmpty && !viewStore.filterText.isEmpty {
+                            emptyStateView
                         }
+                    }
+                    .overlay {
+                        errorStateView
+                    }
+                    .navigationBarTitle(navigationBarTitle)
+                } else {
+                    List(viewStore.breeds, id: \.id) { breed in
+                        CatBreedItemList(breed: breed, isFavourite: viewStore.favouriteBreedIDs.contains(breed.id))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .onTapGesture {
+                                viewStore.send(.breedSelected(breed))
+                            }
+                            .onAppear {
+                                if breed == viewStore.breeds.last {
+                                    viewStore.send(.fetchMoreBreeds)
+                                }
+                            }
+                    }
+                    .overlay {
+                        errorStateView
+                    }
+                    .navigationBarTitle(navigationBarTitle)
                 }
-                .overlay {
-                    emptyListView
-                }
-                .navigationBarTitle(navigationBarTitle)
                 
                 if viewStore.isFetchingMore {
                         HStack {
@@ -164,7 +221,20 @@ struct BreedsListView: View {
         }
     }
     
-    var emptyListView: some View {
+    var emptyStateView: some View {
+        VStack {
+            Image(systemName: "cat.fill")
+                .resizable()
+                .frame(width: 140, height: 100)
+                .padding()
+            Text("No catties match your search 🙀")
+                .font(.title2)
+                .fontWeight(.bold)
+                .padding()
+        }
+    }
+    
+    var errorStateView: some View {
         WithViewStore(store, observe: { $0 }) { viewStore in
             if viewStore.shouldShowErrorState {
                 VStack {

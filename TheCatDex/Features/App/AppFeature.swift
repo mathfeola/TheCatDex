@@ -1,5 +1,5 @@
 //
-//  RootDomain.swift
+//  AppFeature.swift
 //  TheCatDex
 //
 //  Created by Matheus Feola on 02/03/2025.
