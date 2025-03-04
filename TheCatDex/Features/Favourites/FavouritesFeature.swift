@@ -17,18 +17,14 @@ struct FavouritesFeature: Reducer {
     }
     
     enum Action: Equatable {
-        case fetchFavouriteCatBreeds
         case favouriteCatBreedsResponse([CatBreed])
         case breedSelected(CatBreed)
         case closeDetailModal
-        case newOfflineFetchFavouriteCatBreeds([CatBreed])
     }
     
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case .fetchFavouriteCatBreeds:
-                return .none
             case let .favouriteCatBreedsResponse(breeds):
                 state.favouritesBreeds = breeds
                 return .none
@@ -38,9 +34,6 @@ struct FavouritesFeature: Reducer {
                 return .none
             case .closeDetailModal:
                 state.shouldOpenDetail = false
-                return .none
-            case let .newOfflineFetchFavouriteCatBreeds(breeds):
-                state.favouritesBreeds = breeds
                 return .none
             }
         }
@@ -67,7 +60,7 @@ struct FavouritesView: View {
                 .navigationBarTitle("Favourite cat breeds ⭐️")
             }
             .task {
-                viewStore.send(.newOfflineFetchFavouriteCatBreeds(currentFavouritesBreeds))
+                viewStore.send(.favouriteCatBreedsResponse(currentFavouritesBreeds))
             }
             .sheet(
                 isPresented: Binding(

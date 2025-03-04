@@ -26,6 +26,7 @@ struct BreedListFeature: Reducer {
         var currentErrorMessage = String()
         var currentPage = 0
         var isFetchingMore = false
+        var favouriteBreedIDs: Set<String> = []
     }
     
     enum Action {
@@ -36,6 +37,7 @@ struct BreedListFeature: Reducer {
         case closeDetailModal
         case displayError(String)
         case fetchMoreBreeds
+        case updateFavourites([CatBreed])
     }
     
     var body: some ReducerOf<Self> {
@@ -83,6 +85,9 @@ struct BreedListFeature: Reducer {
                     let moreBreeds = try await CatAPI.fetchCatBreeds(page: currentPage).execute() as? [CatBreed]
                     await send(.breedListResponse(moreBreeds ?? []))
                 }
+            case let .updateFavourites(breeds):
+                state.favouriteBreedIDs = Set(breeds.map { $0.id })
+                return .none
             }
         }
     }
@@ -92,12 +97,14 @@ struct BreedsListView: View {
     let navigationBarTitle = "Cat breeds"
     let emptyListSymbolName = "exclamationmark.arrow.trianglehead.2.clockwise.rotate.90"
     let store: StoreOf<BreedListFeature>
+    @Environment(\.modelContext) var modelContext
+    @Query var currentFavouritesBreeds: [CatBreed]
     
     var body: some View {
         WithViewStore(store, observe: { $0 }) { viewStore in
             NavigationStack {
                 List(viewStore.breeds, id: \.id) { breed in
-                    CatBreedItemList(breed: breed)
+                    CatBreedItemList(breed: breed, isFavourite: viewStore.favouriteBreedIDs.contains(breed.id))
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .onTapGesture {
                             viewStore.send(.breedSelected(breed))
@@ -127,6 +134,9 @@ struct BreedsListView: View {
                 if viewStore.breeds.isEmpty {
                     viewStore.send(.fetchBreedList)
                 }
+            }
+            .onAppear {
+                viewStore.send(.updateFavourites(currentFavouritesBreeds))
             }
             .sheet(
                 isPresented: Binding(
@@ -177,10 +187,10 @@ struct BreedsListView: View {
 struct CatBreedItemList: View {
     let breed: CatBreed
     let placeholderSymbolName = "cat.circle"
+    var isFavourite: Bool
     
     @State private var showingSucessAlert = false
     @State private var showingErrorAlert = false
-    
     
     @Environment(\.modelContext) var modelContext
     
@@ -223,12 +233,12 @@ struct CatBreedItemList: View {
         }
         .swipeActions {
             Button {
-                store(breed)
+                isFavourite ? removeFromFavourites(breed: breed) : store(breed)
             } label: {
                 HStack {
-                    Image(systemName: "star")
-                        .tint(.lightCoral)
-                        .frame(width: 5, height: 5)
+                    Text(isFavourite ? "Remove Favourite" : "Save Favourite")
+                        .font(.caption2)
+                        .foregroundColor(isFavourite ? .green : .gray)
                 }
                 .padding()
                 .clipShape(RoundedRectangle(cornerRadius: 10))
@@ -240,7 +250,7 @@ struct CatBreedItemList: View {
                 .padding()
             }
         }
-        .alert("Saved your cat breed successfully in device 😻", isPresented: $showingSucessAlert) {
+        .alert("Updated favourite! 😻", isPresented: $showingSucessAlert) {
             Button("OK", role: .cancel) { }
                 .tint(.lightCoral)
         }
@@ -264,6 +274,16 @@ struct CatBreedItemList: View {
             showingSucessAlert = true
         } catch {
             showingErrorAlert = true
+        }
+    }
+    
+    private func removeFromFavourites(breed: CatBreed) {
+        let descriptor = FetchDescriptor<CatBreed>()
+        if let favourites = try? modelContext.fetch(descriptor) {
+            if let existingBreed = favourites.first(where: { $0.id == breed.id }) {
+                modelContext.delete(existingBreed)
+                try? modelContext.save()
+            }
         }
     }
 }
