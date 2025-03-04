@@ -57,6 +57,12 @@ struct FavouritesView: View {
             NavigationStack {
                 List(viewStore.favouritesBreeds, id: \.id) { breed in
                     FavoriteItem(breed: breed)
+                        .onTapGesture {
+                            viewStore.send(.breedSelected(breed))
+                        }
+                }
+                .overlay {
+                    emptyListView
                 }
                 .navigationBarTitle("Favourite cat breeds ⭐️")
             }
@@ -83,6 +89,23 @@ struct FavouritesView: View {
         }
     }
     
+    var emptyListView: some View {
+        WithViewStore(store, observe: { $0 }) { viewStore in
+            if viewStore.favouritesBreeds.isEmpty {
+                VStack {
+                    Image(systemName: "cat.fill")
+                        .resizable()
+                        .frame(width: 140, height: 100)
+                        .padding()
+                    Text("You got no favourite cat breeds yet! 😿")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .padding()
+                }
+            }
+        }
+    }
+    
     func unfavorite() {
         do {
             try modelContext.delete(model: CatBreed.self)
@@ -100,15 +123,6 @@ struct FavoriteItem: View {
             Text(breed.name ?? "No breed name")
                 .font(.title)
             lifeSpan
-            Button(action: {
-                withAnimation {
-                    unfavorite()
-                }
-            }) {
-                Text("Unfavorite")
-                    .tint(Color("lightCoral"))
-            }
-            .buttonStyle(.borderedProminent)
         }
     }
     
@@ -117,8 +131,5 @@ struct FavoriteItem: View {
         result.font = .callout
         result.foregroundColor = .lightCoral
         return Text("Life span: \(result)")
-    }
-    
-    func unfavorite() {
     }
 }

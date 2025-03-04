@@ -7,6 +7,7 @@
 
 import SwiftUI
 import ComposableArchitecture
+import SwiftData
 
 struct BreedDetailFeature: Reducer {
     struct State: Equatable {
@@ -32,6 +33,9 @@ struct BreedDetailFeature: Reducer {
 
 struct BreedDetailSheet: View {
     let store: StoreOf<BreedDetailFeature>
+    @Environment(\.modelContext) private var modelContext
+    
+    @State private var isFavourite: Bool = false
 
     var body: some View {
         WithViewStore(store, observe: { $0 }) { viewStore in
@@ -63,9 +67,62 @@ struct BreedDetailSheet: View {
                         .font(.callout)
                         .fontWeight(.thin)
                         .padding()
-                    favouriteButton
+                    Button {
+                        withAnimation {
+                            toggleFavourite(breed: viewStore.breed)
+                        }
+                    } label: {
+                        HStack {
+                            Label(isFavourite ? "Remove from Favourites" : "Add to Favourites",
+                                  systemImage: isFavourite ? "star.fill" : "star")
+                            .foregroundColor(isFavourite ? .lightCoral : .gray)
+                        }
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10)
+                                .stroke(isFavourite ? .lightCoral : .gray, lineWidth: 2)
+                        )
+                        .padding()
+                    }
                     Spacer()
                 }
+            }
+            .onAppear {
+                checkIfFavourite(breed: viewStore.breed)
+            }
+        }
+    }
+    
+    private func checkIfFavourite(breed: CatBreed) {
+        let descriptor = FetchDescriptor<CatBreed>()
+        if let favourites = try? modelContext.fetch(descriptor) {
+            isFavourite = favourites.contains(where: { $0.id == breed.id })
+        }
+    }
+
+    private func toggleFavourite(breed: CatBreed) {
+        if isFavourite {
+            removeFromFavourites(breed: breed)
+        } else {
+            addToFavourites(breed: breed)
+        }
+    }
+
+    private func addToFavourites(breed: CatBreed) {
+        modelContext.insert(breed)
+        try? modelContext.save()
+        isFavourite = true
+    }
+
+    private func removeFromFavourites(breed: CatBreed) {
+        let descriptor = FetchDescriptor<CatBreed>()
+        if let favourites = try? modelContext.fetch(descriptor) {
+            if let existingBreed = favourites.first(where: { $0.id == breed.id }) {
+                modelContext.delete(existingBreed)
+                try? modelContext.save()
+                isFavourite = false
             }
         }
     }

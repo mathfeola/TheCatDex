@@ -178,6 +178,10 @@ struct CatBreedItemList: View {
     let breed: CatBreed
     let placeholderSymbolName = "cat.circle"
     
+    @State private var showingSucessAlert = false
+    @State private var showingErrorAlert = false
+    
+    
     @Environment(\.modelContext) var modelContext
     
     var body: some View {
@@ -236,6 +240,14 @@ struct CatBreedItemList: View {
                 .padding()
             }
         }
+        .alert("Saved your cat breed successfully in device 😻", isPresented: $showingSucessAlert) {
+            Button("OK", role: .cancel) { }
+                .tint(.lightCoral)
+        }
+        .alert("Error saving your cat breed in device 😿", isPresented: $showingErrorAlert) {
+            Button("OK", role: .cancel) { }
+                .tint(.lightCoral)
+        }
     }
     
     func store(_ favourite: CatBreed) {
@@ -246,10 +258,12 @@ struct CatBreedItemList: View {
         }
         
         modelContext.insert(favourite)
+        
         do {
             try modelContext.save()
+            showingSucessAlert = true
         } catch {
-            print("Error saving favourite: \(error)")
+            showingErrorAlert = true
         }
     }
 }
