@@ -109,34 +109,34 @@ extension CatBreedDatabase: DependencyKey {
             @Dependency(\.databaseService.context) var contextProvider
             let context = try contextProvider()
             let descriptor = FetchDescriptor<CatBreed>()
-            return try context.fetch(descriptor)  // ✅ Fetch all breeds
+            return try context.fetch(descriptor)
         },
         fetch: { descriptor in
             @Dependency(\.databaseService.context) var contextProvider
             let context = try contextProvider()
-            return try context.fetch(descriptor)  // ✅ Fetch with a descriptor
+            return try context.fetch(descriptor)
         },
         fetchCount: { descriptor in
             @Dependency(\.databaseService.context) var contextProvider
             let context = try contextProvider()
-            return try context.fetch(descriptor).count  // ✅ Get the count
+            return try context.fetch(descriptor).count
         },
         add: { model in
             @Dependency(\.databaseService.context) var contextProvider
             let context = try contextProvider()
-            context.insert(model)  // ✅ Insert into SwiftData
-            try context.save()  // ✅ Save changes
+            context.insert(model)
+            try context.save()
         },
         delete: { model in
             @Dependency(\.databaseService.context) var contextProvider
             let context = try contextProvider()
-            context.delete(model)  // ✅ Remove from SwiftData
-            try context.save()  // ✅ Save changes
+            context.delete(model)
+            try context.save()
         },
         save: {
             @Dependency(\.databaseService.context) var contextProvider
             let context = try contextProvider()
-            try context.save()  // ✅ Ensure manual saving
+            try context.save()
         }
     )
 }

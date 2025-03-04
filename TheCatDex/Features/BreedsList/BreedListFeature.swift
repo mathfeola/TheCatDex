@@ -137,44 +137,9 @@ struct BreedsListView: View {
                 .padding()
                 
                 if !viewStore.filterText.isEmpty {
-                    List(viewStore.filteredBreeds, id: \.id) { breed in
-                        CatBreedItemList(breed: breed, isFavourite: viewStore.favouriteBreedIDs.contains(breed.id))
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .onTapGesture {
-                                viewStore.send(.breedSelected(breed))
-                            }
-                            .onAppear {
-                                if breed == viewStore.breeds.last {
-                                    viewStore.send(.fetchMoreBreeds)
-                                }
-                            }
-                    }
-                    .overlay {
-                        if viewStore.filteredBreeds.isEmpty && !viewStore.filterText.isEmpty {
-                            emptyStateView
-                        }
-                    }
-                    .overlay {
-                        errorStateView
-                    }
-                    .navigationBarTitle(navigationBarTitle)
+                    filteredBreedsList
                 } else {
-                    List(viewStore.breeds, id: \.id) { breed in
-                        CatBreedItemList(breed: breed, isFavourite: viewStore.favouriteBreedIDs.contains(breed.id))
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .onTapGesture {
-                                viewStore.send(.breedSelected(breed))
-                            }
-                            .onAppear {
-                                if breed == viewStore.breeds.last {
-                                    viewStore.send(.fetchMoreBreeds)
-                                }
-                            }
-                    }
-                    .overlay {
-                        errorStateView
-                    }
-                    .navigationBarTitle(navigationBarTitle)
+                    catBreedList
                 }
                 
                 if viewStore.isFetchingMore {
@@ -250,6 +215,53 @@ struct BreedsListView: View {
                         .padding()
                 }
             }
+        }
+    }
+    
+    var catBreedList: some View {
+        WithViewStore(store, observe: { $0 }) { viewStore in
+            List(viewStore.breeds, id: \.id) { breed in
+                CatBreedItemList(breed: breed, isFavourite: viewStore.favouriteBreedIDs.contains(breed.id))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .onTapGesture {
+                        viewStore.send(.breedSelected(breed))
+                    }
+                    .onAppear {
+                        if breed == viewStore.breeds.last {
+                            viewStore.send(.fetchMoreBreeds)
+                        }
+                    }
+            }
+            .overlay {
+                errorStateView
+            }
+            .navigationBarTitle(navigationBarTitle)
+        }
+    }
+    
+    var filteredBreedsList: some View {
+        WithViewStore(store, observe: { $0 }) { viewStore in
+            List(viewStore.filteredBreeds, id: \.id) { breed in
+                CatBreedItemList(breed: breed, isFavourite: viewStore.favouriteBreedIDs.contains(breed.id))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .onTapGesture {
+                        viewStore.send(.breedSelected(breed))
+                    }
+                    .onAppear {
+                        if breed == viewStore.breeds.last {
+                            viewStore.send(.fetchMoreBreeds)
+                        }
+                    }
+            }
+            .overlay {
+                if viewStore.filteredBreeds.isEmpty && !viewStore.filterText.isEmpty {
+                    emptyStateView
+                }
+            }
+            .overlay {
+                errorStateView
+            }
+            .navigationBarTitle(navigationBarTitle)
         }
     }
 }
