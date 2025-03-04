@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import UIKit
 
 public struct EnvironmentUtil {
     
@@ -31,6 +32,10 @@ public struct EnvironmentUtil {
         get {
             return environment?["THE_CAT_API_KEY"] as? String
         }
+    }
+    
+    func identifierForVendor() -> String {
+        UIDevice.current.identifierForVendor?.uuidString ?? ""
     }
 }
 

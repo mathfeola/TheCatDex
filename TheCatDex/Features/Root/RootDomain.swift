@@ -16,7 +16,7 @@ struct AppView: View {
         TabView {
             BreedsListView(store: store.scope(state: \.tab1, action: \.tab1))
                 .tabItem {
-                    Image(systemName: "cat")
+                    Image(systemName: "list.bullet.clipboard")
                     Text("Breed list")
                 }
             
@@ -26,10 +26,9 @@ struct AppView: View {
                     Text("Favourites")
                 }
         }
-        .tint(.pink)
+        .tint(Color("lightCoral"))
     }
 }
-
 
 struct AppFeature: Reducer {
     struct State: Equatable {
@@ -55,4 +54,12 @@ struct AppFeature: Reducer {
             return .none
         }
     }
+}
+
+#Preview {
+  AppView(
+    store: Store(initialState: AppFeature.State()) {
+      AppFeature()
+    }
+  )
 }

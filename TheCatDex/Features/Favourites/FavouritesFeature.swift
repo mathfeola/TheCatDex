@@ -7,21 +7,40 @@
 
 import SwiftUI
 import ComposableArchitecture
+import SwiftData
 
 struct FavouritesFeature: Reducer {
     struct State: Equatable {
-        var someInitialText = "someInitialText"
+        var favouritesBreeds: [CatBreed] = []
+        var selectedBreed: BreedDetailFeature.State?
+        var shouldOpenDetail = false
     }
     
     enum Action: Equatable {
-        case someAction
+        case fetchFavouriteCatBreeds
+        case favouriteCatBreedsResponse([CatBreed])
+        case breedSelected(CatBreed)
+        case closeDetailModal
+        case newOfflineFetchFavouriteCatBreeds([CatBreed])
     }
     
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case .someAction:
-                state.someInitialText = "someInitialText"
+            case .fetchFavouriteCatBreeds:
+                return .none
+            case let .favouriteCatBreedsResponse(breeds):
+                state.favouritesBreeds = breeds
+                return .none
+            case let .breedSelected(breed):
+                state.selectedBreed = BreedDetailFeature.State(breed: breed)
+                state.shouldOpenDetail = true
+                return .none
+            case .closeDetailModal:
+                state.shouldOpenDetail = false
+                return .none
+            case let .newOfflineFetchFavouriteCatBreeds(breeds):
+                state.favouritesBreeds = breeds
                 return .none
             }
         }
@@ -30,10 +49,76 @@ struct FavouritesFeature: Reducer {
 
 struct FavouritesView: View {
     let store: StoreOf<FavouritesFeature>
+    @Environment(\.modelContext) var modelContext
+    @Query var currentFavouritesBreeds: [CatBreed]
     
     var body: some View {
         WithViewStore(store, observe: { $0 }) { viewStore in
-            Text(viewStore.someInitialText)
+            NavigationStack {
+                List(viewStore.favouritesBreeds, id: \.id) { breed in
+                    FavoriteItem(breed: breed)
+                }
+                .navigationBarTitle("Favourite cat breeds ⭐️")
+            }
+            .task {
+                viewStore.send(.newOfflineFetchFavouriteCatBreeds(currentFavouritesBreeds))
+            }
+            .sheet(
+                isPresented: Binding(
+                    get: { viewStore.shouldOpenDetail },
+                    set: { isPresented in
+                        if !isPresented {
+                            viewStore.send(.closeDetailModal)
+                        }
+                    }
+                )
+            ) {
+                if let selectedBreedState = viewStore.selectedBreed {
+                    BreedDetailSheet(store: Store(
+                        initialState: BreedDetailFeature.State(breed: selectedBreedState.breed),
+                        reducer: { BreedDetailFeature() }
+                    ))
+                }
+            }
         }
+    }
+    
+    func unfavorite() {
+        do {
+            try modelContext.delete(model: CatBreed.self)
+        } catch {
+            print("Failed to clear all Country and City data.")
+        }
+    }
+}
+
+struct FavoriteItem: View {
+    let breed: CatBreed
+    
+    var body: some View {
+        VStack(alignment: .leading) {
+            Text(breed.name ?? "No breed name")
+                .font(.title)
+            lifeSpan
+            Button(action: {
+                withAnimation {
+                    unfavorite()
+                }
+            }) {
+                Text("Unfavorite")
+                    .tint(Color("lightCoral"))
+            }
+            .buttonStyle(.borderedProminent)
+        }
+    }
+    
+    var lifeSpan: Text {
+        var result = AttributedString(breed.lifeSpan)
+        result.font = .callout
+        result.foregroundColor = .lightCoral
+        return Text("Life span: \(result)")
+    }
+    
+    func unfavorite() {
     }
 }

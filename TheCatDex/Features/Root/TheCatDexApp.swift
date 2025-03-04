@@ -7,6 +7,7 @@
 
 import SwiftUI
 import ComposableArchitecture
+import SwiftData
 
 @main
 struct TheCatDexApp: App {
@@ -18,5 +19,6 @@ struct TheCatDexApp: App {
         WindowGroup {
             AppView(store: TheCatDexApp.store)
         }
+        .modelContainer(for: [CatBreed.self])
     }
 }

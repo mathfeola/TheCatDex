@@ -13,8 +13,12 @@ protocol API {
     var key: String { get }
     var httpMethod: String { get }
     var path: String { get }
-    
-    func execute() async throws -> Any
+    func execute(using session: URLSession) async throws -> Any
+}
+
+enum FetchError: Error {
+    case decodingError(Error)
+    case networkError(Error)
 }
 
 extension API {
@@ -36,22 +40,27 @@ extension API {
         return request
     }
     
-    private func fetchData<T: Codable & Equatable>(from request: URLRequest) async throws -> T {
-        let (data, _) = try await URLSession.shared.data(for: request)
-
+    private func fetchData<T: Codable & Equatable>(from request: URLRequest, session: URLSession) async throws -> T {
+        let (data, _) = try await session.data(for: request)
+        
         if T.self == String.self, let stringData = String(data: data, encoding: .utf8) as? T {
             return stringData
         }
-        return try JSONDecoder().decode(T.self, from: data)
-    }
-    
-    func genericFetch<T: Codable & Equatable>(parameters: [URLQueryItem]?) async throws -> [T] {
+        
         do {
-            let decodedResponse: [T] = try await fetchData(from: composeRequest(queryItems: parameters))
-                return decodedResponse
+            return try JSONDecoder().decode(T.self, from: data)
         } catch {
-            print("Request failed:", error.localizedDescription)
-            return []
+            throw FetchError.decodingError(error)
+        }
+    }
+
+    func genericFetch<T: Codable & Equatable>(parameters: [URLQueryItem]?, using session: URLSession = URLSession.shared) async throws -> [T] {
+        do {
+            return try await fetchData(from: composeRequest(queryItems: parameters), session: session)
+        } catch let error as FetchError {
+            throw error
+        } catch {
+            throw FetchError.networkError(error)
         }
     }
     
