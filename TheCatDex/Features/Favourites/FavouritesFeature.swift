@@ -5,9 +5,7 @@
 //  Created by Matheus Feola on 02/03/2025.
 //
 
-import SwiftUI
 import ComposableArchitecture
-import SwiftData
 
 struct FavouritesFeature: Reducer {
     struct State: Equatable {
@@ -17,16 +15,26 @@ struct FavouritesFeature: Reducer {
     }
     
     enum Action: Equatable {
-        case favouriteCatBreedsResponse([CatBreed])
+        case fetchFavourites
         case breedSelected(CatBreed)
         case closeDetailModal
+    }
+    
+    func fetchCatBreeds() -> [CatBreed] {
+        @Dependency(\.catBreedDatabase.fetchAll) var fetchAll
+        do {
+            return try fetchAll()
+        } catch {
+            print("❌ Error fetching breeds from SwiftData: \(error)")
+            return []
+        }
     }
     
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case let .favouriteCatBreedsResponse(breeds):
-                state.favouritesBreeds = breeds
+            case .fetchFavourites:
+                state.favouritesBreeds = fetchCatBreeds()
                 return .none
             case let .breedSelected(breed):
                 state.selectedBreed = BreedDetailFeature.State(breed: breed)
@@ -37,92 +45,5 @@ struct FavouritesFeature: Reducer {
                 return .none
             }
         }
-    }
-}
-
-struct FavouritesView: View {
-    let store: StoreOf<FavouritesFeature>
-    @Environment(\.modelContext) var modelContext
-    @Query var currentFavouritesBreeds: [CatBreed]
-    
-    var body: some View {
-        WithViewStore(store, observe: { $0 }) { viewStore in
-            NavigationStack {
-                List(viewStore.favouritesBreeds, id: \.id) { breed in
-                    FavoriteItem(breed: breed)
-                        .onTapGesture {
-                            viewStore.send(.breedSelected(breed))
-                        }
-                }
-                .overlay {
-                    emptyListView
-                }
-                .navigationBarTitle("Favourite cat breeds ⭐️")
-            }
-            .task {
-                viewStore.send(.favouriteCatBreedsResponse(currentFavouritesBreeds))
-            }
-            .sheet(
-                isPresented: Binding(
-                    get: { viewStore.shouldOpenDetail },
-                    set: { isPresented in
-                        if !isPresented {
-                            viewStore.send(.closeDetailModal)
-                        }
-                    }
-                )
-            ) {
-                if let selectedBreedState = viewStore.selectedBreed {
-                    BreedDetailSheet(store: Store(
-                        initialState: BreedDetailFeature.State(breed: selectedBreedState.breed),
-                        reducer: { BreedDetailFeature() }
-                    ))
-                }
-            }
-        }
-    }
-    
-    var emptyListView: some View {
-        WithViewStore(store, observe: { $0 }) { viewStore in
-            if viewStore.favouritesBreeds.isEmpty {
-                VStack {
-                    Image(systemName: "cat.fill")
-                        .resizable()
-                        .frame(width: 140, height: 100)
-                        .padding()
-                    Text("You got no favourite cat breeds yet! 😿")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .padding()
-                }
-            }
-        }
-    }
-    
-    func unfavorite() {
-        do {
-            try modelContext.delete(model: CatBreed.self)
-        } catch {
-            print("Failed to clear all Country and City data.")
-        }
-    }
-}
-
-struct FavoriteItem: View {
-    let breed: CatBreed
-    
-    var body: some View {
-        VStack(alignment: .leading) {
-            Text(breed.name ?? "No breed name")
-                .font(.title)
-            lifeSpan
-        }
-    }
-    
-    var lifeSpan: Text {
-        var result = AttributedString(breed.lifeSpan)
-        result.font = .callout
-        result.foregroundColor = .lightCoral
-        return Text("Life span: \(result)")
     }
 }
