@@ -9,7 +9,6 @@ import SwiftUI
 import ComposableArchitecture
 
 struct BreedListFeature: Reducer {
-    
     enum FeatureErrorMessages: String {
         case decodingError = "🐛 Decoding error: "
         case networkError = "🌐 Network error: "
@@ -18,7 +17,6 @@ struct BreedListFeature: Reducer {
     
     struct State: Equatable {
         var breeds: [CatBreed] = []
-        var isLoading = false
         var selectedBreed: BreedDetailFeature.State?
         var shouldOpenDetail = false
         var shouldShowErrorState = false
@@ -30,7 +28,7 @@ struct BreedListFeature: Reducer {
         var filteredBreeds: [CatBreed] = []
     }
     
-    enum Action {
+    enum Action: Equatable {
         case fetchBreedList
         case breedListResponse([CatBreed])
         case filter(String)
@@ -40,12 +38,16 @@ struct BreedListFeature: Reducer {
         case fetchMoreBreeds
     }
     
-    func fetchCatBreeds() -> [CatBreed] {
+    func fetchCatBreedsFromApi(page: Int) async throws -> [CatBreed] {
+        @Dependency(\.catBreedService) var catBreedService
+        return try await catBreedService.fetchCatBreeds(page)
+    }
+
+    func fetchFavouriteCatBreedsFromDatabase() -> [CatBreed] {
         @Dependency(\.catBreedDatabase.fetchAll) var fetchAll
         do {
             return try fetchAll()
         } catch {
-            print("❌ Error fetching breeds from SwiftData: \(error)")
             return []
         }
     }
@@ -56,11 +58,11 @@ struct BreedListFeature: Reducer {
             case .fetchBreedList:
                 state.currentPage = 0
                 state.isFetchingMore = true
-                state.favouriteBreedIDs = Set(fetchCatBreeds().map { $0.id })
+                state.favouriteBreedIDs = Set(fetchFavouriteCatBreedsFromDatabase().map { $0.id })
                 return .run { send in
                     do {
-                        let breeds = try await CatAPI.fetchCatBreeds(page: 0).execute() as? [CatBreed]
-                        await send(.breedListResponse(breeds ?? []))
+                        let breeds = try await fetchCatBreedsFromApi(page: 0)
+                        await send(.breedListResponse(breeds))
                     } catch FetchError.decodingError(let decodingError) {
                         await send(.displayError(FeatureErrorMessages.decodingError.rawValue + decodingError.localizedDescription))
                     } catch FetchError.networkError(let networkError) {
@@ -104,8 +106,8 @@ struct BreedListFeature: Reducer {
                 guard !state.isFetchingMore else { return .none }
                 state.isFetchingMore = true
                 return .run { [currentPage = state.currentPage] send in
-                    let moreBreeds = try await CatAPI.fetchCatBreeds(page: currentPage).execute() as? [CatBreed]
-                    await send(.breedListResponse(moreBreeds ?? []))
+                    let moreBreeds = try await fetchCatBreedsFromApi(page: currentPage)
+                    await send(.breedListResponse(moreBreeds))
                 }
             }
         }

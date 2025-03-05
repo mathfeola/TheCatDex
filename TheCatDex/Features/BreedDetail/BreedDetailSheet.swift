@@ -12,27 +12,38 @@ import SwiftData
 struct BreedDetailSheet: View {
     let store: StoreOf<BreedDetailFeature>
     @Environment(\.modelContext) private var modelContext
-    
     @State private var isFavourite: Bool = false
+    
+    enum FeatureMessages: String {
+        case buttonFavouriteTitle = "Favourite"
+        case removeFromFavourites = "Remove from Favourites"
+        case addToFavourites = "Add to Favourites"
+        case unkwownBreed = "Unknown breed"
+        case originPlaceholderText = "Origin:"
+        case temperamentPlaceholderText = "Temperament:"
+    }
+    
+    let isFavouriteSymbolName = "star.fill"
+    let isNotFavouriteSymbolName = "star"
 
     var body: some View {
         WithViewStore(store, observe: { $0 }) { viewStore in
             ScrollView {
                 VStack {
-                    Text(viewStore.breed.name ?? "Unknown Breed")
+                    Text(viewStore.breed.name ?? FeatureMessages.unkwownBreed.rawValue)
                         .font(.largeTitle)
                         .padding()
                     
                     breedImage
                     HStack(spacing: 0) {
-                        Text("Origin: ")
+                        Text("\(FeatureMessages.originPlaceholderText) ")
                             .font(.title2)
                         Text(viewStore.breed.origin)
                             .font(.title3)
                             .foregroundStyle(Color("lightCoral"))
                     }
                     
-                    Text("Temperament:")
+                    Text("\(FeatureMessages.temperamentPlaceholderText.rawValue)")
                         .font(.title2)
                         .padding(.top)
                         .padding(.leading)
@@ -51,8 +62,8 @@ struct BreedDetailSheet: View {
                         }
                     } label: {
                         HStack {
-                            Label(isFavourite ? "Remove from Favourites" : "Add to Favourites",
-                                  systemImage: isFavourite ? "star.fill" : "star")
+                            Label(isFavourite ? FeatureMessages.removeFromFavourites.rawValue : FeatureMessages.addToFavourites.rawValue,
+                                  systemImage: isFavourite ? isFavouriteSymbolName : isNotFavouriteSymbolName)
                             .foregroundColor(isFavourite ? .lightCoral : .gray)
                         }
                         .padding()
@@ -130,29 +141,10 @@ struct BreedDetailSheet: View {
         }
     }
     
-    private var favouriteButton: some View {
-        Button {} label: {
-            HStack {
-                Image(systemName: "star")
-                    .tint(.pink)
-                Text("Favourite")
-                    .tint(.pink)
-            }
-            .padding()
-            .frame(maxWidth: .infinity)
-            .clipShape(RoundedRectangle(cornerRadius: 10))
-            .overlay(
-                RoundedRectangle(cornerRadius: 10)
-                    .stroke(Color.pink, lineWidth: 2)
-            )
-            .padding()
-        }
-    }
-    
     @ViewBuilder
     private func makeTemperamentViews(temperament: String) ->  some View {
         let temperaments = temperament.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
-        let colors = [
+        let possibleColors = [
             "lightCoral",
             "lightBlue",
             "lightOrange",
@@ -161,7 +153,7 @@ struct BreedDetailSheet: View {
             "lightMint",
         ]
         
-        let temperamentColors = temperaments.map { ($0, colors.randomElement() ?? "lightPurple") }
+        let temperamentColors = temperaments.map { ($0, possibleColors.randomElement() ?? "lightPurple") }
         
         LazyHGrid(rows: [GridItem(.adaptive(minimum: 20, maximum: 50)), GridItem(.adaptive(minimum: 20, maximum: 50)), GridItem(.adaptive(minimum: 20, maximum: 50))], spacing: 4) {
             ForEach(temperamentColors, id: \.0) { temperament, color in

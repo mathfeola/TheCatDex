@@ -33,9 +33,5 @@ public struct EnvironmentUtil {
             return environment?["THE_CAT_API_KEY"] as? String
         }
     }
-    
-    func identifierForVendor() -> String {
-        UIDevice.current.identifierForVendor?.uuidString ?? ""
-    }
 }
 

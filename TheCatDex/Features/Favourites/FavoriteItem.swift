@@ -10,9 +10,14 @@ import SwiftUI
 struct FavoriteItem: View {
     let breed: CatBreed
     
+    enum Messages: String {
+        case emptyBreedNameText = "No breed name"
+        case lifeSpanPlaceholderText = "Life span:"
+    }
+    
     var body: some View {
         VStack(alignment: .leading) {
-            Text(breed.name ?? "No breed name")
+            Text(breed.name ?? Messages.emptyBreedNameText.rawValue)
                 .font(.title)
             lifeSpan
         }
@@ -22,6 +27,6 @@ struct FavoriteItem: View {
         var result = AttributedString(breed.lifeSpan)
         result.font = .callout
         result.foregroundColor = .lightCoral
-        return Text("Life span: \(result)")
+        return Text("\(Messages.lifeSpanPlaceholderText.rawValue) \(result)")
     }
 }

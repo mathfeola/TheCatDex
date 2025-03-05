@@ -10,6 +10,11 @@ import ComposableArchitecture
 
 struct FavouritesView: View {
     let store: StoreOf<FavouritesFeature>
+    let navigationBarTitle = "Favourite cat breeds ⭐️"
+    
+    enum Messages: String {
+        case emptyList = "You got no favourite cat breeds yet! 😿"
+    }
     
     var body: some View {
         WithViewStore(store, observe: { $0 }) { viewStore in
@@ -23,7 +28,7 @@ struct FavouritesView: View {
                 .overlay {
                     emptyListView
                 }
-                .navigationBarTitle("Favourite cat breeds ⭐️")
+                .navigationBarTitle(navigationBarTitle)
             }
             .task {
                 viewStore.send(.fetchFavourites)
@@ -43,20 +48,26 @@ struct FavouritesView: View {
                         initialState: BreedDetailFeature.State(breed: selectedBreedState.breed),
                         reducer: { BreedDetailFeature() }
                     ))
+                    .onDisappear {
+                        viewStore.send(.fetchFavourites)
+                    }
                 }
             }
         }
     }
     
+    @ViewBuilder
     private var emptyListView: some View {
+        let emptyFavouritListSymbol = "cat.fill"
+        let emptyMessage = Messages.emptyList
         WithViewStore(store, observe: { $0 }) { viewStore in
             if viewStore.favouritesBreeds.isEmpty {
                 VStack {
-                    Image(systemName: "cat.fill")
+                    Image(systemName: emptyFavouritListSymbol)
                         .resizable()
                         .frame(width: 140, height: 100)
                         .padding()
-                    Text("You got no favourite cat breeds yet! 😿")
+                    Text(emptyMessage.rawValue)
                         .font(.title2)
                         .fontWeight(.bold)
                         .padding()

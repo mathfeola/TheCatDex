@@ -42,11 +42,7 @@ public class SwiftDataModelConfigurationProvider {
     @MainActor
     public lazy var container: ModelContainer = {
         // Define schema and configuration
-        let schema = Schema(
-            [
-                CatBreed.self
-            ]
-        )
+        let schema = Schema([CatBreed.self])
         let configuration = ModelConfiguration(isStoredInMemoryOnly: isStoredInMemoryOnly)
         
         // Create ModelContainer with schema and configuration

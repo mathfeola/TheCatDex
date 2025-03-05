@@ -16,10 +16,9 @@ final class CatAPITests: XCTestCase {
     }
     
     func testFetchCatBreedsSuccess() async throws {
-        // Sample JSON Response
         let jsonData = """
         [
-            { "id": "beng", "name": "Bengal", "origin": "USA", "temperament" : "Happy", "description": "Fluffy" }
+            { "id": "beng", "name": "Bengal", "origin": "USA", "temperament" : "Happy", "life_span": "12", "description": "Fluffy" }
         ]
         """.data(using: .utf8)!
         

@@ -9,14 +9,20 @@ import SwiftUI
 import ComposableArchitecture
 
 struct BreedsListView: View {
-    let navigationBarTitle = "Cat breeds"
-    let emptyListSymbolName = "exclamationmark.arrow.trianglehead.2.clockwise.rotate.90"
     let store: StoreOf<BreedListFeature>
+    let navigationBarTitle = "Cat breeds"
+    let errorStateSymbolName = "exclamationmark.arrow.trianglehead.2.clockwise.rotate.90"
+    let emptyListSymbolName = "cat.fill"
+    
+    enum Messages: String {
+        case filterEmptySearchMessa = "No catties match your search 🙀"
+        case searchFieldPlaceholder = "Search breeds..."
+    }
     
     var body: some View {
         WithViewStore(store, observe: { $0 }) { viewStore in
             NavigationStack {
-                TextField("Search breeds...", text: viewStore.binding(
+                TextField(Messages.searchFieldPlaceholder.rawValue, text: viewStore.binding(
                     get: \.filterText,
                     send: { .filter($0) }
                 ))
@@ -30,14 +36,14 @@ struct BreedsListView: View {
                 }
                 
                 if viewStore.isFetchingMore {
-                        HStack {
-                            Spacer()
-                            ProgressView()
-                                .foregroundStyle(Color("lightCoral"))
-                                .padding()
-                            Spacer()
-                        }
+                    HStack {
+                        Spacer()
+                        ProgressView()
+                            .foregroundStyle(Color("lightCoral"))
+                            .padding()
+                        Spacer()
                     }
+                }
             }
             .task {
                 if viewStore.breeds.isEmpty {
@@ -72,11 +78,11 @@ struct BreedsListView: View {
     
     private var emptyStateView: some View {
         VStack {
-            Image(systemName: "cat.fill")
+            Image(systemName: emptyListSymbolName)
                 .resizable()
                 .frame(width: 140, height: 100)
                 .padding()
-            Text("No catties match your search 🙀")
+            Text(Messages.filterEmptySearchMessa.rawValue)
                 .font(.title2)
                 .fontWeight(.bold)
                 .padding()
@@ -87,7 +93,7 @@ struct BreedsListView: View {
         WithViewStore(store, observe: { $0 }) { viewStore in
             if viewStore.shouldShowErrorState {
                 VStack {
-                    Image(systemName: emptyListSymbolName)
+                    Image(systemName: errorStateSymbolName)
                         .resizable()
                         .foregroundStyle(.pink)
                         .frame(width: 160, height: 120)

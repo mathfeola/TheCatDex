@@ -11,7 +11,7 @@ import SwiftData
 
 struct BreedDetailFeature: Reducer {
     struct State: Equatable {
-        let breed: CatBreed
+        var breed: CatBreed
     }
     
     enum Action {

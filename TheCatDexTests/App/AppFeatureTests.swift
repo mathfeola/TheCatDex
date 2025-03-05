@@ -12,7 +12,7 @@ import ComposableArchitecture
 @MainActor
 final class AppFeatureTests: XCTestCase {
     
-    func testTab1ActionD() async {
+    func testTab1() async {
         let store = TestStore(initialState: AppFeature.State(), reducer: { AppFeature() })
         await store.send(.tab1(.displayError("Some error"))) {
             $0.tab1.shouldShowErrorState = true

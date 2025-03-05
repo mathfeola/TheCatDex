@@ -8,6 +8,11 @@
 import ComposableArchitecture
 
 struct FavouritesFeature: Reducer {
+    
+    enum ErrorMessages: String {
+        case fetchingFromDatabase = "❌ Error fetching breeds from SwiftData:"
+    }
+    
     struct State: Equatable {
         var favouritesBreeds: [CatBreed] = []
         var selectedBreed: BreedDetailFeature.State?
@@ -20,12 +25,12 @@ struct FavouritesFeature: Reducer {
         case closeDetailModal
     }
     
-    func fetchCatBreeds() -> [CatBreed] {
+    func fetchFavouriteCatBreedsFromDatabase() -> [CatBreed] {
         @Dependency(\.catBreedDatabase.fetchAll) var fetchAll
         do {
             return try fetchAll()
         } catch {
-            print("❌ Error fetching breeds from SwiftData: \(error)")
+            print("\(ErrorMessages.fetchingFromDatabase) \(error)")
             return []
         }
     }
@@ -34,7 +39,7 @@ struct FavouritesFeature: Reducer {
         Reduce { state, action in
             switch action {
             case .fetchFavourites:
-                state.favouritesBreeds = fetchCatBreeds()
+                state.favouritesBreeds = fetchFavouriteCatBreedsFromDatabase()
                 return .none
             case let .breedSelected(breed):
                 state.selectedBreed = BreedDetailFeature.State(breed: breed)

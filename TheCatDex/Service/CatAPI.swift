@@ -6,6 +6,35 @@
 //
 
 import Foundation
+import ComposableArchitecture
+
+public protocol CatBreedService {
+    func fetchCatBreeds(_ page: Int) async throws -> [CatBreed]
+}
+
+public struct CatAPIService: CatBreedService {
+    public init() {}
+
+    public func fetchCatBreeds(_ page: Int) async throws -> [CatBreed] {
+        let api = CatAPI.fetchCatBreeds(page: page)
+        guard let breeds = try await api.execute() as? [CatBreed] else {
+            throw FetchError.decodingError(NSError(domain: "Invalid data", code: -1))
+        }
+        return breeds
+    }
+}
+
+extension DependencyValues {
+    var catBreedService: CatBreedService {
+        get { self[CatBreedServiceKey.self] }
+        set { self[CatBreedServiceKey.self] = newValue }
+    }
+}
+
+private struct CatBreedServiceKey: DependencyKey {
+    static let liveValue: CatBreedService = CatAPIService()  // ✅ Inject API service
+}
+
 
 enum CatAPI: API {
     case fetchCatBreeds(page: Int)

@@ -17,41 +17,23 @@ struct CatBreedItemList: View {
     @State private var showingErrorAlert = false
     @Environment(\.modelContext) var modelContext
     
+    enum Messages: String {
+        case noCatBreedName = "No cat breed name"
+        case removeFromFavourites = "Remove from Favourites"
+        case saveInFavourites = "Save in Favourites"
+        case updatedFavourite = "Updated favourite! 😻"
+        case errorSavingFavourite = "Error saving your cat breed in device 😿"
+        case unknownErrorLoadingImage = "Unknown error"
+        case ok = "OK"
+    }
+    
     var body: some View {
         HStack {
             if let breedImage = breed.image,
                let url = URL(string: breedImage.url) {
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: 60, height: 60)
-                            .clipShape(RoundedRectangle(cornerRadius: 10))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .stroke(.lightCoral, lineWidth: 2)
-                            )
-                    case .failure:
-                        Image(systemName: placeholderSymbolName)
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: 60, height: 60)
-                            .clipShape(RoundedRectangle(cornerRadius: 10))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .stroke(Color.pink, lineWidth: 2)
-                            )
-                    case .empty:
-                        ProgressView()
-                            .frame(width: 40, height: 40)
-                    @unknown default:
-                        fatalError("Error loading image")
-                    }
-                }
+                asyncCatImage(url: url)
             }
-            Text("\(breed.name ?? "Cat breed name")")
+            Text("\(breed.name ?? Messages.noCatBreedName.rawValue)")
             Spacer()
         }
         .swipeActions {
@@ -59,7 +41,7 @@ struct CatBreedItemList: View {
                 isFavourite ? removeFromFavourites(breed: breed) : storeInFavourites(breed)
             } label: {
                 HStack {
-                    Text(isFavourite ? "Remove from Favourites" : "Save in Favourites")
+                    Text(isFavourite ? Messages.removeFromFavourites.rawValue : Messages.saveInFavourites.rawValue)
                         .font(.caption2)
                         .foregroundColor(isFavourite ? .green : .gray)
                 }
@@ -73,20 +55,53 @@ struct CatBreedItemList: View {
                 .padding()
             }
         }
-        .alert("Updated favourite! 😻", isPresented: $showingSucessAlert) {
-            Button("OK", role: .cancel) { }
+        .alert(Messages.updatedFavourite.rawValue, isPresented: $showingSucessAlert) {
+            Button(Messages.ok.rawValue, role: .cancel) { }
                 .tint(.lightCoral)
         }
-        .alert("Error saving your cat breed in device 😿", isPresented: $showingErrorAlert) {
-            Button("OK", role: .cancel) { }
+        .alert(Messages.errorSavingFavourite.rawValue, isPresented: $showingErrorAlert) {
+            Button(Messages.ok.rawValue, role: .cancel) { }
                 .tint(.lightCoral)
+        }
+    }
+    
+    @ViewBuilder
+    func asyncCatImage(url: URL) -> some View {
+        AsyncImage(url: url) { phase in
+            switch phase {
+            case .success(let image):
+                image
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 60, height: 60)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(.lightCoral, lineWidth: 2)
+                    )
+            case .failure:
+                Image(systemName: placeholderSymbolName)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 60, height: 60)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(Color.pink, lineWidth: 2)
+                    )
+            case .empty:
+                ProgressView()
+                    .frame(width: 40, height: 40)
+            @unknown default:
+                fatalError(Messages.unknownErrorLoadingImage.rawValue)
+            }
         }
     }
     
     private func storeInFavourites(_ favourite: CatBreed) {
         let existingBreeds = try? modelContext.fetch(FetchDescriptor<CatBreed>())
+        
         if existingBreeds?.contains(where: { $0.id == favourite.id }) == true {
-            print("Breed already exists in favourites")
             return
         }
         
