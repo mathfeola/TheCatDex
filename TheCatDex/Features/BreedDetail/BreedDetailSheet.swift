@@ -33,7 +33,6 @@ struct BreedDetailSheet: View {
                     Text(viewStore.breed.name ?? FeatureMessages.unkwownBreed.rawValue)
                         .font(.largeTitle)
                         .padding()
-                    
                     breedImage
                     HStack(spacing: 0) {
                         Text("\(FeatureMessages.originPlaceholderText) ")
@@ -42,16 +41,13 @@ struct BreedDetailSheet: View {
                             .font(.title3)
                             .foregroundStyle(Color("lightCoral"))
                     }
-                    
                     Text("\(FeatureMessages.temperamentPlaceholderText.rawValue)")
                         .font(.title2)
                         .padding(.top)
                         .padding(.leading)
                         .padding(.trailing)
-                    
                     makeTemperamentViews(temperament: viewStore.breed.temperament)
                         .frame(width: .leastNonzeroMagnitude)
-                    
                     Text(viewStore.breed.breedDescription)
                         .font(.callout)
                         .fontWeight(.thin)

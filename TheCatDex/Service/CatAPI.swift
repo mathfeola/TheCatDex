@@ -32,9 +32,8 @@ extension DependencyValues {
 }
 
 private struct CatBreedServiceKey: DependencyKey {
-    static let liveValue: CatBreedService = CatAPIService()  // ✅ Inject API service
+    static let liveValue: CatBreedService = CatAPIService()
 }
-
 
 enum CatAPI: API {
     case fetchCatBreeds(page: Int)
