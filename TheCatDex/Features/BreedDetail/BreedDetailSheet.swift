@@ -149,7 +149,7 @@ struct BreedDetailSheet: View {
             "lightBlue",
             "lightOrange",
             "lightPurple",
-            "lightGray",
+            "lightSalmon",
             "lightMint",
         ]
         

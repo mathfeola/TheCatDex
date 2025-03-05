@@ -90,18 +90,18 @@ public struct CatBreedDatabase {
 
 extension CatBreedDatabase: DependencyKey {
     public static let liveValue = Self(
-        fetchAll: {
-            @Dependency(\.databaseService.context) var contextProvider
-            let context = try contextProvider()
-            let descriptor = FetchDescriptor<CatBreed>()
-            return try context.fetch(descriptor)
-        },
         catIsFavourite: { model in
             @Dependency(\.databaseService.context) var contextProvider
             let context = try contextProvider()
             var descriptor = FetchDescriptor<CatBreed>()
             let oloco = try context.fetch(descriptor).first
             return oloco
+        },
+        fetchAll: {
+            @Dependency(\.databaseService.context) var contextProvider
+            let context = try contextProvider()
+            let descriptor = FetchDescriptor<CatBreed>()
+            return try context.fetch(descriptor)
         },
         add: { model in
             @Dependency(\.databaseService.context) var contextProvider
