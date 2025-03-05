@@ -36,6 +36,7 @@ struct BreedListFeature: Reducer {
         case closeDetailModal
         case displayError(String)
         case fetchMoreBreeds
+        case fetchCurrentFavourites
     }
     
     func fetchCatBreedsFromApi(page: Int) async throws -> [CatBreed] {
@@ -109,6 +110,9 @@ struct BreedListFeature: Reducer {
                     let moreBreeds = try await fetchCatBreedsFromApi(page: currentPage)
                     await send(.breedListResponse(moreBreeds))
                 }
+            case .fetchCurrentFavourites:
+                state.favouriteBreedIDs = Set(fetchFavouriteCatBreedsFromDatabase().map { $0.id })
+                return .none
             }
         }
     }

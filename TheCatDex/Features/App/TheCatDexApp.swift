@@ -19,33 +19,25 @@ struct TheCatDexApp: App {
         WindowGroup {
             AppView(store: TheCatDexApp.store)
         }
-//        .modelContainer(for: [CatBreed.self])
         .modelContainer(SwiftDataModelConfigurationProvider.shared.container)
     }
 }
 
 public class SwiftDataModelConfigurationProvider {
-    // Singleton instance for configuration
     public static let shared = SwiftDataModelConfigurationProvider(isStoredInMemoryOnly: false, autosaveEnabled: true)
     
-    // Properties to manage configuration options
     private var isStoredInMemoryOnly: Bool
     private var autosaveEnabled: Bool
     
-    // Private initializer to enforce singleton pattern
     private init(isStoredInMemoryOnly: Bool, autosaveEnabled: Bool) {
         self.isStoredInMemoryOnly = isStoredInMemoryOnly
         self.autosaveEnabled = autosaveEnabled
     }
     
-    // Lazy initialization of ModelContainer
     @MainActor
     public lazy var container: ModelContainer = {
-        // Define schema and configuration
         let schema = Schema([CatBreed.self])
         let configuration = ModelConfiguration(isStoredInMemoryOnly: isStoredInMemoryOnly)
-        
-        // Create ModelContainer with schema and configuration
         let container = try! ModelContainer(for: schema, configurations: [configuration])
         container.mainContext.autosaveEnabled = autosaveEnabled
         return container
@@ -85,17 +77,14 @@ public extension DependencyValues {
 }
 
 public struct CatBreedDatabase {
+    var catIsFavourite: (CatBreed) throws -> CatBreed?
     public var fetchAll: @Sendable () throws -> [CatBreed]
-    public var fetch: @Sendable (FetchDescriptor<CatBreed>) throws -> [CatBreed]
-    public var fetchCount: @Sendable (FetchDescriptor<CatBreed>) throws -> Int
     public var add: @Sendable (CatBreed) throws -> Void
     public var delete: @Sendable (CatBreed) throws -> Void
-    public var save: @Sendable () throws -> Void
     
     enum CatBreedDatabaseError: Error {
         case add
         case delete
-        case save
     }
 }
 
@@ -107,15 +96,12 @@ extension CatBreedDatabase: DependencyKey {
             let descriptor = FetchDescriptor<CatBreed>()
             return try context.fetch(descriptor)
         },
-        fetch: { descriptor in
+        catIsFavourite: { model in
             @Dependency(\.databaseService.context) var contextProvider
             let context = try contextProvider()
-            return try context.fetch(descriptor)
-        },
-        fetchCount: { descriptor in
-            @Dependency(\.databaseService.context) var contextProvider
-            let context = try contextProvider()
-            return try context.fetch(descriptor).count
+            var descriptor = FetchDescriptor<CatBreed>()
+            let oloco = try context.fetch(descriptor).first
+            return oloco
         },
         add: { model in
             @Dependency(\.databaseService.context) var contextProvider
@@ -127,11 +113,6 @@ extension CatBreedDatabase: DependencyKey {
             @Dependency(\.databaseService.context) var contextProvider
             let context = try contextProvider()
             context.delete(model)
-            try context.save()
-        },
-        save: {
-            @Dependency(\.databaseService.context) var contextProvider
-            let context = try contextProvider()
             try context.save()
         }
     )

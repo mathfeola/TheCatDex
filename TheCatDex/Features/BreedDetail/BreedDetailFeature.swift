@@ -15,15 +15,12 @@ struct BreedDetailFeature: Reducer {
     }
     
     enum Action {
-        case closeButtonTapped
         case favouriteButtonTapped
     }
     
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case .closeButtonTapped:
-                return .none
             case .favouriteButtonTapped:
                 return .none
             }

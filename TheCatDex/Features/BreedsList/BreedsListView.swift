@@ -117,6 +117,9 @@ struct BreedsListView: View {
                         viewStore.send(.breedSelected(breed))
                     }
                     .onAppear {
+                        viewStore.send(.fetchCurrentFavourites)
+                    }
+                    .onAppear {
                         if breed == viewStore.breeds.last {
                             viewStore.send(.fetchMoreBreeds)
                         }

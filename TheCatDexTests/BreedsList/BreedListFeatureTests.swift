@@ -21,8 +21,7 @@ final class BreedListFeatureTests: XCTestCase {
                              breedDescription: "Snarf!",
                              image: nil,
                              isFavourite: nil)
-    
-    
+
     struct MockCatBreedService: CatBreedService {
         var fetchBreedsHandler: (Int) async throws -> [CatBreed]
         
@@ -79,7 +78,7 @@ final class BreedListFeatureTests: XCTestCase {
     }
     
     func testFilterBreeds() async {
-        let store = await TestStore(
+        let store = TestStore(
             initialState: BreedListFeature.State(breeds: [mockBreed]),
             reducer: { BreedListFeature() }
         )
@@ -133,9 +132,12 @@ final class BreedListFeatureTests: XCTestCase {
 
         await store.send(.fetchMoreBreeds) {
             $0.isFetchingMore = true
-            
         }
-        await store.finish()
-        await store.skipReceivedActions()
+                            
+        await store.receive(.breedListResponse([self.mockBreed])) {
+            $0.breeds = [self.mockBreed, self.mockBreed]
+            $0.currentPage = 2
+            $0.isFetchingMore = false
+        }
     }
 }
